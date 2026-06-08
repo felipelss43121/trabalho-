@@ -26,7 +26,11 @@ install:
 	$(PIP) install -r requirements.txt
 
 install-browsers:
-	playwright install chromium
+	python3 -m playwright install chromium || \
+	  (echo "⚠  Download do Chromium bloqueado pela rede." && \
+	   echo "   Usando binário local: $$(cat .env | grep PLAYWRIGHT_CHROME_PATH | cut -d= -f2)" && \
+	   python3 -c "from playwright.sync_api import sync_playwright; p=sync_playwright().start(); b=p.chromium.launch(headless=True,args=['--no-sandbox'],executable_path='$$(grep PLAYWRIGHT_CHROME_PATH .env | cut -d= -f2)'); b.close(); p.stop(); print('   Chromium OK.')" 2>/dev/null || \
+	   echo "   PLAYWRIGHT_CHROME_PATH não configurado — configure o .env na máquina local.")
 
 setup: install install-browsers
 
