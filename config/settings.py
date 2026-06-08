@@ -103,6 +103,13 @@ class PlaywrightConfig:
     espera_entre_tentativas: int = field(
         default_factory=lambda: _int("ESPERA_ENTRE_TENTATIVAS", 5)
     )
+    # Caminho explícito ao binário do Chromium (ignora verificação de build)
+    chrome_executable: str | None = field(
+        default_factory=lambda: os.getenv(
+            "PLAYWRIGHT_CHROME_PATH",
+            "/opt/pw-browsers/chromium-1194/chrome-linux/chrome",
+        ) or None
+    )
 
 
 @dataclass(frozen=True)

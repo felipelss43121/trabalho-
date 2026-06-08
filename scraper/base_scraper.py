@@ -47,13 +47,20 @@ class BaseScraper:
 
     def iniciar(self) -> None:
         """Inicia o Playwright e abre um contexto de browser."""
-        logger.info("Iniciando Playwright (headless=%s)…", settings.playwright.headless)
+        cfg = settings.playwright
+        logger.info("Iniciando Playwright (headless=%s)…", cfg.headless)
         self._playwright = sync_playwright().start()
-        self._browser = self._playwright.chromium.launch(
-            headless=settings.playwright.headless,
-            slow_mo=settings.playwright.slow_mo,
-            args=["--no-sandbox", "--disable-dev-shm-usage"],
-        )
+
+        launch_kwargs: dict = {
+            "headless": cfg.headless,
+            "slow_mo": cfg.slow_mo,
+            "args": ["--no-sandbox", "--disable-dev-shm-usage"],
+        }
+        if cfg.chrome_executable:
+            launch_kwargs["executable_path"] = cfg.chrome_executable
+            logger.info("Usando Chromium em: %s", cfg.chrome_executable)
+
+        self._browser = self._playwright.chromium.launch(**launch_kwargs)
         self._context = self._browser.new_context(
             viewport={"width": 1366, "height": 768},
             locale="pt-BR",

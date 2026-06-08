@@ -1,7 +1,8 @@
 .PHONY: install install-browsers setup db-init coleta agendador teste lint docker-up docker-down docker-coleta docker-agendador help
 
-PYTHON := python
-PIP    := pip
+PYTHON := python3
+PIP    := python3 -m pip
+PYTEST := python3 -m pytest
 
 # -----------------------------------------------------------------------
 help:
@@ -40,13 +41,13 @@ agendador:
 
 # -----------------------------------------------------------------------
 teste:
-	pytest tests/unit/ -v --tb=short
+	$(PYTEST) tests/unit/ -v --tb=short
 
 teste-integracao:
-	pytest tests/integration/ -v --tb=short
+	$(PYTEST) tests/integration/ -v --tb=short
 
 teste-tudo:
-	pytest -v
+	$(PYTEST) -v
 
 lint:
 	$(PYTHON) -m mypy . --ignore-missing-imports --no-strict-optional
