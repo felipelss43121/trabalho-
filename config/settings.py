@@ -49,11 +49,46 @@ class ColetaConfig:
     unidade_gestora: str = field(
         default_factory=lambda: os.getenv("UNIDADE_GESTORA", "")
     )
-    acao: str = field(default_factory=lambda: os.getenv("ACAO", ""))
-    subacao: str = field(default_factory=lambda: os.getenv("SUBACAO", ""))
-    tipo_despesa_gerencial: str = field(
-        default_factory=lambda: os.getenv("TIPO_DESPESA_GERENCIAL", "TODAS")
+    # "1313:2115,4685:1958,4685:1959,4685:1960,3929:0000"
+    _acoes_subacoes_raw: str = field(
+        default_factory=lambda: os.getenv("ACOES_SUBACOES", "")
     )
+    # "subsidios,credito de vale transporte,Prog. Parcerias Público Privadas,TODOS"
+    _detalhamentos_raw: str = field(
+        default_factory=lambda: os.getenv("DETALHAMENTOS_GERENCIAIS", "TODOS")
+    )
+
+    @property
+    def acoes_subacoes(self) -> list[tuple[str, str]]:
+        """
+        Retorna lista de pares (acao, subacao) parseados da variável de ambiente.
+
+        Formato: ACAO:SUBACAO,ACAO:SUBACAO,...
+        """
+        if not self._acoes_subacoes_raw:
+            return []
+        pares: list[tuple[str, str]] = []
+        for item in self._acoes_subacoes_raw.split(","):
+            partes = item.strip().split(":")
+            if len(partes) == 2:
+                pares.append((partes[0].strip(), partes[1].strip()))
+            else:
+                pass  # Formato inválido — ignorado
+        return pares
+
+    @property
+    def detalhamentos_gerenciais(self) -> list[str]:
+        """
+        Retorna lista de termos de busca para o Detalhamento da Despesa Gerencial.
+
+        'TODOS' instrui o scraper a iterar sobre todas as opções do select.
+        """
+        return [d.strip() for d in self._detalhamentos_raw.split(",") if d.strip()]
+
+    @property
+    def coletar_todos_detalhamentos(self) -> bool:
+        """True quando 'TODOS' está na lista de detalhamentos."""
+        return any(d.upper() == "TODOS" for d in self.detalhamentos_gerenciais)
 
 
 @dataclass(frozen=True)
