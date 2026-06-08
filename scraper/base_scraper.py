@@ -54,7 +54,12 @@ class BaseScraper:
         launch_kwargs: dict = {
             "headless": cfg.headless,
             "slow_mo": cfg.slow_mo,
-            "args": ["--no-sandbox", "--disable-dev-shm-usage"],
+            # --ignore-certificate-errors necessário para CA do e-Fisco PE
+            "args": [
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                "--ignore-certificate-errors",
+            ],
         }
         if cfg.chrome_executable:
             launch_kwargs["executable_path"] = cfg.chrome_executable

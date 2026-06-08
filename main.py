@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import sys
 from datetime import date, datetime
+from pathlib import Path
 
 from config.settings import settings
 from database.connection import criar_tabelas, testar_conexao
