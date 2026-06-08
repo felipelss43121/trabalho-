@@ -61,12 +61,31 @@ def _construir_parser() -> argparse.ArgumentParser:
     grupo.add_argument(
         "--apenas-exportar",
         action="store_true",
-        help="Gera apenas os arquivos de exportação (sem coletar)",
+        help="Gera apenas os arquivos de exportação CSV/Excel (sem coletar)",
+    )
+    grupo.add_argument(
+        "--exportar-planilha",
+        action="store_true",
+        help="Injeta os dados na planilha operacional existente (base/planilha_base.xlsx)",
     )
     grupo.add_argument(
         "--inicializar-db",
         action="store_true",
         help="Cria as tabelas no banco de dados e encerra",
+    )
+    parser.add_argument(
+        "--planilha-base",
+        type=Path,
+        default=None,
+        metavar="ARQUIVO.xlsx",
+        help="Caminho da planilha-base (padrão: base/planilha_base.xlsx)",
+    )
+    parser.add_argument(
+        "--planilha-saida",
+        type=Path,
+        default=None,
+        metavar="ARQUIVO.xlsx",
+        help="Caminho de saída da planilha (padrão: exports/efisco_dados.xlsx)",
     )
     return parser
 
@@ -110,6 +129,8 @@ def main() -> int:
         )
         return 1
 
+    from services.planilha_service import PlanilhaService
+
     coleta_service = ColetaService()
     export_service = ExportService()
 
@@ -117,8 +138,19 @@ def main() -> int:
     # Coleta de dados
     # ------------------------------------------------------------------
     try:
-        if args.apenas_exportar:
-            logger.info("Modo: apenas exportação")
+        if args.exportar_planilha:
+            logger.info("Modo: exportar para planilha operacional")
+            from pathlib import Path as _Path
+            base = args.planilha_base or _Path("base/planilha_base.xlsx")
+            svc = PlanilhaService(
+                planilha_base=base,
+                planilha_saida=args.planilha_saida,
+            )
+            caminho = svc.exportar(data_coleta)
+            logger.info("Planilha gerada: %s", caminho)
+            return 0
+        elif args.apenas_exportar:
+            logger.info("Modo: apenas exportação CSV/Excel")
         elif args.apenas_empenho:
             logger.info("Modo: apenas Despesa Empenhada")
             qtd = coleta_service.coletar_despesa_empenhada(data_coleta)

@@ -18,6 +18,7 @@ help:
 	@echo "  make docker-up        Sobe PostgreSQL via Docker"
 	@echo "  make docker-down      Para e remove containers"
 	@echo "  make docker-coleta    Executa coleta no container"
+	@echo "  make planilha         Injeta dados na planilha operacional"
 	@echo "  make docker-agendador Inicia agendador no container"
 
 # -----------------------------------------------------------------------
@@ -38,6 +39,9 @@ coleta:
 
 agendador:
 	$(PYTHON) scheduler/agendador.py
+
+planilha:
+	$(PYTHON) main.py --exportar-planilha
 
 # -----------------------------------------------------------------------
 teste:
