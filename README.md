@@ -131,14 +131,72 @@ Conecte o Power BI diretamente ao PostgreSQL usando as views:
 
 ---
 
-## Agendamento
+## Agendamento interno (APScheduler)
 
-Para execução diária automática, adicione ao cron (Linux):
+Para rodar como serviço contínuo com disparo automático diário:
 
 ```bash
-# Executa às 06:00 todos os dias
-0 6 * * * /caminho/.venv/bin/python /caminho/main.py >> /var/log/efisco_cron.log 2>&1
+# Disparo às 06:00 (padrão)
+python scheduler/agendador.py
+
+# Horário customizado
+python scheduler/agendador.py --hora 7 --minuto 30
+
+# Executa imediatamente e depois agenda
+python scheduler/agendador.py --executar-agora
 ```
+
+---
+
+## Docker
+
+```bash
+# Sobe apenas o PostgreSQL
+make docker-up
+
+# Executa coleta única no container
+make docker-coleta
+
+# Inicia agendador diário como serviço
+make docker-agendador
+
+# Para tudo
+make docker-down
+```
+
+---
+
+## Testes
+
+```bash
+# Instala dependências e roda testes unitários
+make teste
+
+# Testes de integração (requer PostgreSQL)
+make teste-integracao
+
+# Toda a suite
+make teste-tudo
+
+# Verificação de tipagem
+make lint
+```
+
+Cobertura atual: helpers, schemas Pydantic, base scraper, scraper de empenho,
+service de exportação e repositórios (integração).
+
+---
+
+## Validação de Dados
+
+Antes de persistir, todo registro passa pela validação Pydantic
+(`database/schemas.py`):
+
+- Strings obrigatórias não podem ser vazias
+- Valores monetários são `Decimal` com `>= 0` onde aplicável
+- Strings opcionais em branco são normalizadas para `None`
+- Campos de texto são truncados no limite da coluna
+- Registros inválidos são descartados com log de warning
 
 ---
 

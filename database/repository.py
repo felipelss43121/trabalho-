@@ -6,14 +6,38 @@ from __future__ import annotations
 from datetime import date
 from typing import Any
 
+from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
 from database.connection import obter_sessao
 from database.models import FatoEmpenho, FatoFichaFinanceira
+from database.schemas import EmpenhoSchema, FichaFinanceiraSchema
 from utils.logger import setup_logger
 
 logger = setup_logger(__name__)
+
+
+def _validar_empenhos(registros: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Valida cada registro via Pydantic, descartando os inválidos."""
+    validos: list[dict[str, Any]] = []
+    for i, rec in enumerate(registros):
+        try:
+            validos.append(EmpenhoSchema(**rec).model_dump())
+        except ValidationError as exc:
+            logger.warning("Registro de empenho %d inválido (descartado): %s", i, exc)
+    return validos
+
+
+def _validar_fichas(registros: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Valida cada registro via Pydantic, descartando os inválidos."""
+    validos: list[dict[str, Any]] = []
+    for i, rec in enumerate(registros):
+        try:
+            validos.append(FichaFinanceiraSchema(**rec).model_dump())
+        except ValidationError as exc:
+            logger.warning("Registro de ficha %d inválido (descartado): %s", i, exc)
+    return validos
 
 
 class EmpenhoRepository:
@@ -34,6 +58,11 @@ class EmpenhoRepository:
             Quantidade de linhas afetadas.
         """
         if not registros:
+            return 0
+
+        registros = _validar_empenhos(registros)
+        if not registros:
+            logger.warning("Nenhum registro de empenho válido após validação.")
             return 0
 
         with obter_sessao() as session:
@@ -102,6 +131,11 @@ class FichaFinanceiraRepository:
             Quantidade de linhas afetadas.
         """
         if not registros:
+            return 0
+
+        registros = _validar_fichas(registros)
+        if not registros:
+            logger.warning("Nenhum registro de ficha válido após validação.")
             return 0
 
         with obter_sessao() as session:
